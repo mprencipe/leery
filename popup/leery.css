@@ -1,0 +1,15 @@
+html, body {
+    width: auto;
+    padding: 5px;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    white-space: nowrap;
+}
+
+.hidden {
+    display: none;
+}

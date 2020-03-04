@@ -1,0 +1,29 @@
+{
+    "manifest_version": 2,
+    "name": "Leery",
+    "version": "1.0",
+    "description": "Notifies when visiting a leery site with insecure settings.",
+    "icons": {
+        "48": "icons/detective-48.png",
+        "96": "icons/detective-96.png"
+    },
+    "browser_action": {
+        "default_icon": {
+            "32": "icons/detective-32.png",
+            "16": "icons/detective-16.png"
+        },
+        "default_title": "",
+        "default_popup": "popup/leery.html"
+    },
+    "permissions": [
+        "webRequest",
+        "tabs",
+        "storage",
+        "<all_urls>"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    }
+}
