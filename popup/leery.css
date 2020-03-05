@@ -1,15 +1,35 @@
 html, body {
     width: auto;
     padding: 5px;
+    font-family: "Open Sans Light", sans-serif;
+    font-size: 15px;
+    white-space: nowrap;
 }
 
 ul {
     margin: 0;
     padding: 0;
     list-style: none;
-    white-space: nowrap;
+    
 }
 
 .hidden {
     display: none;
+}
+
+#title {
+    font-size: 20px;
+    display: flex;
+    align-items:center;
+    margin-bottom: 14px;
+}
+
+#logo {
+    margin-right: 15px;
+}
+
+#clear_data {
+    margin: 0 auto;
+    display: block;
+    margin-top: 14px;
 }

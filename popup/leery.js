@@ -4,7 +4,7 @@ browser.storage.local.get().then(store => {
         .then((tabs) => {
             const behaviors = document.getElementById('behaviors');
 
-            const data = store.data == null ? {} : store.data[tabs[0].url];
+            const data = store.data != null && store.data[tabs[0].url] != null ? store.data[tabs[0].url] : {};
             const justFine = document.getElementById('just-fine');
             if (Object.keys(data).length === 0) {
                 justFine.classList.remove('hidden');
@@ -15,10 +15,17 @@ browser.storage.local.get().then(store => {
 
             if (data['cors-star']) {
                 const listItem = document.createElement("li");
-                listItem.textContent = 'Site calls an API with Access-Control-Allow-Origin: *';
+                listItem.textContent = 'API call with Access-Control-Allow-Origin: *';
                 behaviors.appendChild(listItem);
             }
 
         });
 
+    document.getElementById('clear_data').onclick = () => {
+        browser.storage.local.set({ data: {} });
+        browser.browserAction.setBadgeText({
+            text: ''
+        });
+        window.close();
+    };
 });

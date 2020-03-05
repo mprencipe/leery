@@ -5,31 +5,23 @@ browser.storage.local.get().then(store => {
         };
     }
 
-    function setText(url) {
-        const data = store.data[url] != null ? store.data[url] : {};
-        const text = Object.keys(data).length === 0 ? '' : '!';
-        browser.browserAction.setBadgeText({
-            text
-        });
-    }
-    
     function responseListener(requestDetails) {
         const origin = requestDetails.originUrl;
-    
+
         if (store.data[origin] == null) {
             store.data[origin] = {};
         }
-    
+
         if (requestDetails.type != 'xmlhttprequest') {
             return;
         }
-    
+
         const corsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() == 'access-control-allow-origin')
         if (corsHeader != null && corsHeader.value == '*') {
             store.data[origin]['cors-star'] = true;
             browser.storage.local.set(store);
         }
-    
+
         browser.tabs.query({ currentWindow: true, active: true })
             .then((tabs) => {
                 if (tabs[0].url == origin) {
@@ -42,11 +34,21 @@ browser.storage.local.get().then(store => {
         responseListener,
         { urls: ["<all_urls>"] },
         ["responseHeaders"]);
-
-    browser.tabs.onActivated.addListener((activeInfo) => {
-        browser.tabs.query({ currentWindow: true, active: true })
-            .then((tabs) => {
-                setText(tabs[0].url);
-            });
-    });
 });
+
+browser.tabs.onActivated.addListener((activeInfo) => {
+    browser.tabs.query({ currentWindow: true, active: true })
+        .then((tabs) => {
+            setText(tabs[0].url);
+        });
+});
+
+function setText(url) {
+    browser.storage.local.get().then(store => {
+        const data = store.data != null && store.data[url] != null ? store.data[url] : {};
+        const text = Object.keys(data).length === 0 ? '' : '!';
+        browser.browserAction.setBadgeText({
+            text
+        });
+    });
+}
