@@ -6,28 +6,30 @@ browser.storage.local.get().then(store => {
     }
 
     function setText(url) {
+        const data = store.data[url] != null ? store.data[url] : [];
+        const text = data.length === 0 ? '' : '!';
         browser.browserAction.setBadgeText({
-            text: !store.data[url] ? '' : '!'
+            text
         });
     }
-
+    
     function responseListener(requestDetails) {
         const origin = requestDetails.originUrl;
-
+    
         if (store.data[origin] == null) {
-            store.data[origin] = [];
+            store.data[origin] = {};
         }
-
+    
         if (requestDetails.type != 'xmlhttprequest') {
             return;
         }
-
+    
         const corsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() == 'access-control-allow-origin')
         if (corsHeader != null && corsHeader.value == '*') {
-            store.data[origin].push('cors-star');
+            store.data[origin]['cors-star'] = true;
             browser.storage.local.set(store);
         }
-
+    
         browser.tabs.query({ currentWindow: true, active: true })
             .then((tabs) => {
                 if (tabs[0].url == origin) {
