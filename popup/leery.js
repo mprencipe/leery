@@ -4,8 +4,7 @@ browser.storage.local.get().then(store => {
         .then((tabs) => {
             const behaviors = document.getElementById('behaviors');
 
-            const data = store.data[tabs[0].url];
-            console.log(tabs[0].url, data)
+            const data = store.data == null ? {} : store.data[tabs[0].url];
             const justFine = document.getElementById('just-fine');
             if (Object.keys(data).length === 0) {
                 justFine.classList.remove('hidden');

@@ -6,8 +6,8 @@ browser.storage.local.get().then(store => {
     }
 
     function setText(url) {
-        const data = store.data[url] != null ? store.data[url] : [];
-        const text = data.length === 0 ? '' : '!';
+        const data = store.data[url] != null ? store.data[url] : {};
+        const text = Object.keys(data).length === 0 ? '' : '!';
         browser.browserAction.setBadgeText({
             text
         });
@@ -49,5 +49,4 @@ browser.storage.local.get().then(store => {
                 setText(tabs[0].url);
             });
     });
-    // <a target="_blank" href="https://icons8.com/icons/set/detective">Detective icon</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
 });
