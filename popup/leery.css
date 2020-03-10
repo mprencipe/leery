@@ -33,7 +33,7 @@ ul {
     margin-right: 40px;
 }
 
-.items > * {
+.abnormalities-list > * {
     background-color: #eeeeee;
     padding: 5px;
 }
