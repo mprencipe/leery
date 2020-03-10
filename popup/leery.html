@@ -7,13 +7,26 @@
 </head>
 
 <body>
-    <div id="title">
-        <img id="logo" src="../icons/detective-32.png" />
-        <label>Leery</label>
-    </div>
-    <div id="just-fine">This site is just fine!</div>
-    <ul id="behaviors"></ul>
-    <button id="clear_data">Clear data</button>
+    <section class="header">
+        <img src="../icons/detective-32.png" />
+        <label class="title">Leery</label>
+        <img class="clickable toggle-options" src="../icons/gear-32.png" />
+    </section>
+    <section class="abnormalities">
+        <ul class="abnormalities-list">
+            <li class="just-fine">This site is just fine!</li>
+        </ul>
+    </section>
+    <section class="options hidden">
+        <div class="align-vertical">
+            <label>Only check CORS in site domain</label>
+            <label class="switch">
+                <input type="checkbox" class="cors-same-domain">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <button class="clear-data">Clear data</button>
+    </section>
     <script src="leery.js"></script>
 </body>
 
