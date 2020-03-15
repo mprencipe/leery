@@ -40,13 +40,20 @@ browser.storage.local.get().then(store => {
             justFine.classList.add('hidden');
 
             if (data['cors-star']) {
-                const listItem = document.createElement("li");
-                listItem.textContent = 'API call with Access-Control-Allow-Origin: *';
-                abnormalitiesList.appendChild(listItem);
+                addAbnormality('API call with Access-Control-Allow-Origin: *', abnormalitiesList);
+            }
+            if (data['clickjack']) {
+                addAbnormality('No X-Frame-Options present', abnormalitiesList);
             }
 
         });
 });
+
+function addAbnormality(description, abnormalitiesList) {
+    const listItem = document.createElement("li");
+    listItem.textContent = description;
+    abnormalitiesList.appendChild(listItem);
+}
 
 document.querySelector('.clear-data').onclick = () => {
     // options

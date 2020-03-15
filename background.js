@@ -24,7 +24,8 @@ browser.tabs.onActivated.addListener((activeInfo) => {
 function setText(url) {
     browser.storage.local.get().then(store => {
         const data = store.data != null && store.data[url] != null ? store.data[url] : {};
-        const text = Object.keys(data).length === 0 ? '' : '!';
+        const abnormalities = Object.keys(data).length;
+        const text = abnormalities === 0 ? '' : `${abnormalities}`;
         browser.browserAction.setBadgeText({
             text
         });
@@ -36,9 +37,6 @@ function ajaxRequest(requestDetails) {
 }
 
 function onHeadersReceived(requestDetails) {
-    if (!ajaxRequest(requestDetails)) {
-        return;
-    }
 
     browser.storage.local.get().then(store => {
         // if site has no existing data, add an empty data object
@@ -59,7 +57,12 @@ function onHeadersReceived(requestDetails) {
 
 }
 
+// header handlers
 function handleCors(requestDetails, store) {
+    if (!ajaxRequest(requestDetails)) {
+        return;
+    }
+
     const documentOrigin = new URL(requestDetails.documentUrl).origin;
     const requestOrigin = new URL(requestDetails.url).origin;
 
@@ -73,10 +76,23 @@ function handleCors(requestDetails, store) {
         browser.storage.local.set(store);
     }
 }
+function handleClickJacking(requestDetails, store) {
+    if (requestDetails.type === 'main_frame') {
+        const xFrameOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-frame-options');
+        if (!xFrameOptionsHeader) {
+            if (store.data[requestDetails.url] == null) {
+                store.data[requestDetails.url] = {};
+            }
+            store.data[requestDetails.url].clickjack = true;
+            browser.storage.local.set(store);
+        }
+    }
+}
 
 // set site data based on header abnormalities
 function handleHeaders(requestDetails, store) {
     handleCors(requestDetails, store);
+    handleClickJacking(requestDetails, store);
 }
 
 browser.storage.local.get().then(store => {
