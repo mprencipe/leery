@@ -42,8 +42,11 @@ browser.storage.local.get().then(store => {
             if (data['cors-star']) {
                 addAbnormality('API call with Access-Control-Allow-Origin: *', abnormalitiesList);
             }
-            if (data['clickjack']) {
+            if (data.clickjack) {
                 addAbnormality('No X-Frame-Options present', abnormalitiesList);
+            }
+            if (data.referrerLeak) {
+                addAbnormality('Unsafe or missing referrer policy', abnormalitiesList);
             }
 
         });

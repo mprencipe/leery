@@ -77,7 +77,7 @@ function handleCors(requestDetails, store) {
     }
 }
 function handleClickJacking(requestDetails, store) {
-    if (requestDetails.type === 'main_frame') {
+    if (isSiteRootRequest(requestDetails)) {
         const xFrameOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-frame-options');
         if (!xFrameOptionsHeader) {
             if (store.data[requestDetails.url] == null) {
@@ -89,10 +89,29 @@ function handleClickJacking(requestDetails, store) {
     }
 }
 
+const unsafeReferrerValues = ['unsafe-url', 'origin', 'origin-when-cross-origin'];
+function handleReferrer(requestDetails, store) {
+    if (isSiteRootRequest(requestDetails)) {
+        const referrerPolicyHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'referrer-policy');
+        if (!referrerPolicyHeader || unsafeReferrerValues.includes(referrerPolicyHeader.value.toLowerCase())) {
+            if (store.data[requestDetails.url] == null) {
+                store.data[requestDetails.url] = {};
+            }
+            store.data[requestDetails.url].referrerLeak = true;
+            browser.storage.local.set(store);
+        }
+    }
+}
+
+function isSiteRootRequest(requestDetails) {
+    return requestDetails.type === 'main_frame';
+}
+
 // set site data based on header abnormalities
 function handleHeaders(requestDetails, store) {
     handleCors(requestDetails, store);
     handleClickJacking(requestDetails, store);
+    handleReferrer(requestDetails, store);
 }
 
 browser.storage.local.get().then(store => {
