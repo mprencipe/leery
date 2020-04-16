@@ -103,6 +103,19 @@ function handleReferrer(requestDetails, store) {
     }
 }
 
+function handleHSTS(requestDetails, store) {
+    if (isSiteRootRequest(requestDetails)) {
+        const hstsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'strict-transport-security');
+        if (!hstsHeader) {
+            if (store.data[requestDetails.url] == null) {
+                store.data[requestDetails.url] = {};
+            }
+            store.data[requestDetails.url].hsts = true;
+            browser.storage.local.set(store);
+        }
+    }
+}
+
 function isSiteRootRequest(requestDetails) {
     return requestDetails.type === 'main_frame';
 }
@@ -112,6 +125,7 @@ function handleHeaders(requestDetails, store) {
     handleCors(requestDetails, store);
     handleClickJacking(requestDetails, store);
     handleReferrer(requestDetails, store);
+    handleHSTS(requestDetails, store);
 }
 
 browser.storage.local.get().then(store => {

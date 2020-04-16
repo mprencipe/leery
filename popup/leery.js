@@ -48,6 +48,9 @@ browser.storage.local.get().then(store => {
             if (data.referrerLeak) {
                 addAbnormality('Unsafe or missing referrer policy', abnormalitiesList);
             }
+            if (data.hsts) {
+                addAbnormality('No Strict-Transport-Security present', abnormalitiesList);
+            }
 
         });
 });

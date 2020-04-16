@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Leery",
-    "version": "1.6",
+    "version": "1.7",
     "description": "Notifies when visiting a leery site with insecure settings.",
     "icons": {
         "48": "icons/detective-48.png",
