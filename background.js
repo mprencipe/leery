@@ -76,6 +76,7 @@ function handleCors(requestDetails, store) {
         browser.storage.local.set(store);
     }
 }
+
 function handleClickJacking(requestDetails, store) {
     if (isSiteRootRequest(requestDetails)) {
         const xFrameOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-frame-options');
@@ -116,6 +117,19 @@ function handleHSTS(requestDetails, store) {
     }
 }
 
+function handleMimeSniffing(requestDetails, store) {
+    if (isSiteRootRequest(requestDetails)) {
+        const xContentTypeOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-content-type-options');
+        if (!xContentTypeOptionsHeader || xContentTypeOptionsHeader.value.toLowerCase() !== 'nosniff') {
+            if (store.data[requestDetails.url] == null) {
+                store.data[requestDetails.url] = {};
+            }
+            store.data[requestDetails.url].mimeSniffing = true;
+            browser.storage.local.set(store);
+        }
+    }
+}
+
 function isSiteRootRequest(requestDetails) {
     return requestDetails.type === 'main_frame';
 }
@@ -126,6 +140,7 @@ function handleHeaders(requestDetails, store) {
     handleClickJacking(requestDetails, store);
     handleReferrer(requestDetails, store);
     handleHSTS(requestDetails, store);
+    handleMimeSniffing(requestDetails, store);
 }
 
 browser.storage.local.get().then(store => {

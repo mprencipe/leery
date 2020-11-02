@@ -51,6 +51,9 @@ browser.storage.local.get().then(store => {
             if (data.hsts) {
                 addAbnormality('No Strict-Transport-Security present', abnormalitiesList);
             }
+            if (data.mimeSniffing) {
+                addAbnormality('X-Content-Type-Options: nosniff missing', abnormalitiesList);
+            }
 
         });
 });
