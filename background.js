@@ -1,154 +1,90 @@
-// ensure other code doesn't blow up
-function initializeStore(store) {
-    if (!store) {
-        store = {};
-    }
-    if (!store.data) {
-        store.data = {};
-    }
-    if (!store.options) {
-        store.options = {};
-    }
-    browser.storage.local.set(store);
-}
+(function () {
 
-// set notification when switching to a new tab
-browser.tabs.onActivated.addListener((activeInfo) => {
-    browser.tabs.query({ currentWindow: true, active: true })
-        .then((tabs) => {
-            setText(tabs[0].url);
-        });
-});
+    const isChrome = typeof chrome !== 'undefined';
 
-// set notification text if site has abnormalities
-function setText(url) {
-    browser.storage.local.get().then(store => {
-        const data = store.data != null && store.data[url] != null ? store.data[url] : {};
-        const abnormalities = Object.keys(data).length;
-        const text = abnormalities === 0 ? '' : `${abnormalities}`;
+    // ensure other code doesn't blow up
+    async function initializeStore() {
+        const store = await browser.storage.local.get();
+        if (!store) {
+            store = {};
+        }
+        if (!store.data) {
+            store.data = {};
+        }
+        if (!store.options) {
+            store.options = {};
+        }
+        await browser.storage.local.set(store);
+    }
+
+    function getOriginUrl(requestDetails) {
+        if (isChrome) {
+            return normalizeUrl(requestDetails.initiator ?? requestDetails.url);
+        }
+        return normalizeUrl(requestDetails.originUrl);
+    }
+
+    // set notification text if site has warnings
+    async function setNotificationText(url) {
+        const store = await browser.storage.local.get();
+        const data = store.data[url] ?? {};
+        const warnings = Object.keys(data).length;
+        const text = warnings === 0 ? '' : `${warnings}`;
         browser.browserAction.setBadgeText({
             text
         });
-    });
-}
+    }
 
-function ajaxRequest(requestDetails) {
-    return requestDetails.type === 'xmlhttprequest';
-}
+    async function handleHeaders(requestDetails) {
+        await Handlers.handleCors(requestDetails);
+        await Handlers.handleClickJacking(requestDetails);
+        await Handlers.handleReferrer(requestDetails);
+        await Handlers.handleHSTS(requestDetails);
+        await Handlers.handleMimeSniffing(requestDetails);
+    }
 
-function onHeadersReceived(requestDetails) {
+    async function onHeadersReceived(requestDetails) {
+        const originUrl = getOriginUrl(requestDetails);
 
-    browser.storage.local.get().then(store => {
+        const store = await browser.storage.local.get();
+
         // if site has no existing data, add an empty data object
-        if (store.data[requestDetails.originUrl] == null) {
-            store.data[requestDetails.originUrl] = {};
+        if (store.data[originUrl] == null) {
+            store.data[originUrl] = {};
         }
+        await browser.storage.local.set(store);
 
-        handleHeaders(requestDetails, store);
+        await handleHeaders(requestDetails);
 
-        browser.tabs.query({ currentWindow: true, active: true })
-            .then((tabs) => {
-                if (tabs[0].url == requestDetails.originUrl) {
-                    setText(tabs[0].url);
+        try {
+            const tabs = await browser.tabs.query({ currentWindow: true, active: true })
+            if (tabs && tabs.length && normalizeUrl(tabs[0].url) == originUrl) {
+                await setNotificationText(normalizeUrl(tabs[0].url));
+            }
+        } catch (err) {
+            console.log('Error querying tabs', err);
+        }
+    }
+
+    initializeStore();
+
+    // set notification when switching to a new tab
+    browser.tabs.onActivated.addListener(async (activeInfo) => {
+        setTimeout(async () => {
+            try {
+                const tabs = await browser.tabs.query({ currentWindow: true, active: true });
+                if (tabs.length) {
+                    setNotificationText(normalizeUrl(tabs[0].url));
                 }
-            });
-
+            } catch (err) {
+                console.log('Error querying tabs', err);
+            }
+        }, 100);
     });
 
-}
+    browser.webRequest.onHeadersReceived.addListener(
+        onHeadersReceived,
+        { urls: ["<all_urls>"] },
+        ["responseHeaders"]);
 
-// header handlers
-function handleCors(requestDetails, store) {
-    if (!ajaxRequest(requestDetails)) {
-        return;
-    }
-
-    const documentOrigin = new URL(requestDetails.documentUrl).origin;
-    const requestOrigin = new URL(requestDetails.url).origin;
-
-    if (store.options.corsSameDomain && (documentOrigin !== requestOrigin)) {
-        return;
-    }
-
-    const corsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() == 'access-control-allow-origin');
-    if (corsHeader != null && corsHeader.value == '*') {
-        store.data[requestDetails.originUrl]['cors-star'] = true;
-        browser.storage.local.set(store);
-    }
-}
-
-function handleClickJacking(requestDetails, store) {
-    if (isSiteRootRequest(requestDetails)) {
-        const xFrameOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-frame-options');
-        if (!xFrameOptionsHeader) {
-            if (store.data[requestDetails.url] == null) {
-                store.data[requestDetails.url] = {};
-            }
-            store.data[requestDetails.url].clickjack = true;
-            browser.storage.local.set(store);
-        }
-    }
-}
-
-const unsafeReferrerValues = ['unsafe-url', 'origin', 'origin-when-cross-origin'];
-function handleReferrer(requestDetails, store) {
-    if (isSiteRootRequest(requestDetails)) {
-        const referrerPolicyHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'referrer-policy');
-        if (!referrerPolicyHeader || unsafeReferrerValues.includes(referrerPolicyHeader.value.toLowerCase())) {
-            if (store.data[requestDetails.url] == null) {
-                store.data[requestDetails.url] = {};
-            }
-            store.data[requestDetails.url].referrerLeak = true;
-            browser.storage.local.set(store);
-        }
-    }
-}
-
-function handleHSTS(requestDetails, store) {
-    if (isSiteRootRequest(requestDetails)) {
-        const hstsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'strict-transport-security');
-        if (!hstsHeader) {
-            if (store.data[requestDetails.url] == null) {
-                store.data[requestDetails.url] = {};
-            }
-            store.data[requestDetails.url].hsts = true;
-            browser.storage.local.set(store);
-        }
-    }
-}
-
-function handleMimeSniffing(requestDetails, store) {
-    if (isSiteRootRequest(requestDetails)) {
-        const xContentTypeOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-content-type-options');
-        if (!xContentTypeOptionsHeader || xContentTypeOptionsHeader.value.toLowerCase() !== 'nosniff') {
-            if (store.data[requestDetails.url] == null) {
-                store.data[requestDetails.url] = {};
-            }
-            store.data[requestDetails.url].mimeSniffing = true;
-            browser.storage.local.set(store);
-        }
-    }
-}
-
-function isSiteRootRequest(requestDetails) {
-    return requestDetails.type === 'main_frame';
-}
-
-// set site data based on header abnormalities
-function handleHeaders(requestDetails, store) {
-    handleCors(requestDetails, store);
-    handleClickJacking(requestDetails, store);
-    handleReferrer(requestDetails, store);
-    handleHSTS(requestDetails, store);
-    handleMimeSniffing(requestDetails, store);
-}
-
-browser.storage.local.get().then(store => {
-    initializeStore(store);
-});
-
-// initialize listeners
-browser.webRequest.onHeadersReceived.addListener(
-    onHeadersReceived,
-    { urls: ["<all_urls>"] },
-    ["responseHeaders"]);
+})();

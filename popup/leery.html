@@ -4,30 +4,33 @@
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="leery.css" />
+    <script type="application/javascript" src="../browser-polyfill.js"></script>
 </head>
 
 <body>
-    <section class="header">
-        <img src="../icons/detective-32.png" />
-        <label class="title">Leery</label>
-        <img class="clickable toggle-options" src="../icons/gear-32.png" />
-    </section>
-    <section class="abnormalities">
-        <div class="just-fine">This site is just fine!</div>
-        <ul class="abnormalities-list">
-        </ul>
-    </section>
-    <section class="options hidden">
-        <div class="align-vertical">
-            <label>Only check CORS in site domain</label>
-            <label class="switch">
-                <input type="checkbox" class="cors-same-domain">
-                <span class="slider round"></span>
-            </label>
+
+    <div class="flex flex-space padded">
+        <div class="flex flex-space">
+            <img src="../icons/detective-32.png" />
+            <label class="title">Leery</label>
         </div>
+        <div class="clickable toggle-options"></div>
+    </div>
+
+    <div class="warnings bottom padded">
+        <div class="no-warnings">No warnings for this site</div>
+        <ul class="warnings-list">
+
+        </ul>
+    </div>
+
+    <div class="options bottom hidden padded">
         <button class="clear-data">Clear data</button>
-    </section>
-    <script src="leery.js"></script>
+    </div>
+
+    <script type="application/javascript" src="../util.js"></script>
+    <script type="application/javascript" src="leery.js"></script>
+
 </body>
 
 </html>

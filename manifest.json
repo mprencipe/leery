@@ -23,6 +23,9 @@
     ],
     "background": {
         "scripts": [
+            "browser-polyfill.js",
+            "util.js",
+            "handlers.js",
             "background.js"
         ]
     }
