@@ -1,7 +1,5 @@
 (function () {
 
-    const isChrome = typeof chrome !== 'undefined';
-
     // ensure other code doesn't blow up
     async function initializeStore() {
         const store = await browser.storage.local.get();
@@ -21,7 +19,7 @@
         if (isChrome) {
             return normalizeUrl(requestDetails.initiator ?? requestDetails.url);
         }
-        return normalizeUrl(requestDetails.originUrl);
+        return normalizeUrl(requestDetails.originUrl ?? requestDetails.url);
     }
 
     // set notification text if site has warnings
@@ -36,11 +34,11 @@
     }
 
     async function handleHeaders(requestDetails) {
-        await Handlers.handleCors(requestDetails);
-        await Handlers.handleClickJacking(requestDetails);
-        await Handlers.handleReferrer(requestDetails);
-        await Handlers.handleHSTS(requestDetails);
-        await Handlers.handleMimeSniffing(requestDetails);
+        await Handlers.handleCors(requestDetails, setNotificationText);
+        await Handlers.handleClickJacking(requestDetails, setNotificationText);
+        await Handlers.handleReferrer(requestDetails, setNotificationText);
+        await Handlers.handleHSTS(requestDetails, setNotificationText);
+        await Handlers.handleMimeSniffing(requestDetails, setNotificationText);
     }
 
     async function onHeadersReceived(requestDetails) {
@@ -74,7 +72,7 @@
             try {
                 const tabs = await browser.tabs.query({ currentWindow: true, active: true });
                 if (tabs.length) {
-                    setNotificationText(normalizeUrl(tabs[0].url));
+                    await setNotificationText(normalizeUrl(tabs[0].url));
                 }
             } catch (err) {
                 console.log('Error querying tabs', err);

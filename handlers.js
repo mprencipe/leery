@@ -10,23 +10,25 @@ const Handlers = {};
         return requestDetails.type === 'xmlhttprequest';
     }
 
-    Handlers.handleCors = async (requestDetails) => {
+    Handlers.handleCors = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
 
         if (!ajaxRequest(requestDetails)) {
             return;
         }
 
-        const documentOrigin = new URL(chrome ? requestDetails.initiator : requestDetails.documentUrl).origin;
+        const documentOrigin = new URL(isChrome ? requestDetails.initiator : requestDetails.documentUrl).origin;
 
         const corsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() == 'access-control-allow-origin');
         if (corsHeader != null && corsHeader.value == '*') {
-            store.data[normalizeUrl(documentOrigin)]['cors-star'] = true;
+            const normalizedUrl = normalizeUrl(documentOrigin);
+            store.data[normalizedUrl]['cors-star'] = true;
             await browser.storage.local.set(store);
+            await setTextCallback(normalizedUrl);
         }
     }
 
-    Handlers.handleClickJacking = async (requestDetails) => {
+    Handlers.handleClickJacking = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
 
         if (isSiteRootRequest(requestDetails)) {
@@ -38,12 +40,13 @@ const Handlers = {};
                 }
                 store.data[normalizedUrl].clickjack = true;
                 await browser.storage.local.set(store);
+                await setTextCallback(normalizedUrl);
             }
         }
     }
 
     const unsafeReferrerValues = ['unsafe-url', 'origin', 'origin-when-cross-origin'];
-    Handlers.handleReferrer = async (requestDetails) => {
+    Handlers.handleReferrer = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
 
         if (isSiteRootRequest(requestDetails)) {
@@ -55,27 +58,29 @@ const Handlers = {};
                 }
                 store.data[normalizedUrl].referrerLeak = true;
                 await browser.storage.local.set(store);
+                await setTextCallback(normalizedUrl);
             }
         }
     }
 
-    Handlers.handleMimeSniffing = async (requestDetails) => {
+    Handlers.handleMimeSniffing = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
 
         if (isSiteRootRequest(requestDetails)) {
             const xContentTypeOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-content-type-options');
-            if (!xContentTypeOptionsHeader || xContentTypeOptionsHeader.value.toLowerCase() !== 'nosniff') {
+            if (!xContentTypeOptionsHeader || !xContentTypeOptionsHeader.value.toLowerCase().includes('nosniff')) {
                 const normalizedUrl = normalizeUrl(requestDetails.url);
                 if (store.data[normalizedUrl] == null) {
                     store.data[normalizedUrl] = {};
                 }
                 store.data[normalizedUrl].mimeSniffing = true;
                 await browser.storage.local.set(store);
+                await setTextCallback(normalizedUrl);
             }
         }
     }
 
-    Handlers.handleHSTS = async (requestDetails) => {
+    Handlers.handleHSTS = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
 
         if (isSiteRootRequest(requestDetails)) {
@@ -87,6 +92,7 @@ const Handlers = {};
                 }
                 store.data[normalizedUrl].hsts = true;
                 await browser.storage.local.set(store);
+                await setTextCallback(normalizedUrl);
             }
         }
     }
