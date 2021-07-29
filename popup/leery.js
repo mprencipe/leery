@@ -78,6 +78,9 @@ browser.storage.local.get().then((store) => {
         if (data.server) {
             addWarning('Server header might reveal server software', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server', warningsList);
         }
+        if (data.csp) {
+            addWarning('No Content-Security-Policy', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP', warningsList);
+        }
 
     }).catch((err) => {
         console.log('Error querying tabs', err);

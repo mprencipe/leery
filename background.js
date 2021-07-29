@@ -40,6 +40,7 @@
         await Handlers.handleHSTS(requestDetails, setNotificationText);
         await Handlers.handleMimeSniffing(requestDetails, setNotificationText);
         await Handlers.handleServer(requestDetails, setNotificationText);
+        await Handlers.handleContentSecurityPolicy(requestDetails, setNotificationText);
     }
 
     async function onHeadersReceived(requestDetails) {

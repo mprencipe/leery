@@ -66,6 +66,7 @@ const Handlers = {};
     Handlers.handleHSTS = handleHeader('strict-transport-security', 'hsts', true);
     Handlers.handleServer = handleHeader('server', 'server', true);
     Handlers.handleClickJacking = handleHeader('x-frame-options', 'clickjack', false);
+    Handlers.handleContentSecurityPolicy = handleHeader('content-security-policy', 'csp', false);
 
     function handleHeader(headerName, propertyName, alertIfExists) {
         return async (requestDetails, setTextCallback) => {
