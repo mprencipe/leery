@@ -39,6 +39,7 @@
         await Handlers.handleReferrer(requestDetails, setNotificationText);
         await Handlers.handleHSTS(requestDetails, setNotificationText);
         await Handlers.handleMimeSniffing(requestDetails, setNotificationText);
+        await Handlers.handleServer(requestDetails, setNotificationText);
     }
 
     async function onHeadersReceived(requestDetails) {

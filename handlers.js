@@ -28,23 +28,6 @@ const Handlers = {};
         }
     }
 
-    Handlers.handleClickJacking = async (requestDetails, setTextCallback) => {
-        const store = await browser.storage.local.get();
-
-        if (isSiteRootRequest(requestDetails)) {
-            const xFrameOptionsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'x-frame-options');
-            if (!xFrameOptionsHeader) {
-                const normalizedUrl = normalizeUrl(requestDetails.url);
-                if (store.data[normalizedUrl] == null) {
-                    store.data[normalizedUrl] = {};
-                }
-                store.data[normalizedUrl].clickjack = true;
-                await browser.storage.local.set(store);
-                await setTextCallback(normalizedUrl);
-            }
-        }
-    }
-
     const unsafeReferrerValues = ['unsafe-url', 'origin', 'origin-when-cross-origin'];
     Handlers.handleReferrer = async (requestDetails, setTextCallback) => {
         const store = await browser.storage.local.get();
@@ -80,19 +63,25 @@ const Handlers = {};
         }
     }
 
-    Handlers.handleHSTS = async (requestDetails, setTextCallback) => {
-        const store = await browser.storage.local.get();
+    Handlers.handleHSTS = handleHeader('strict-transport-security', 'hsts', true);
+    Handlers.handleServer = handleHeader('server', 'server', true);
+    Handlers.handleClickJacking = handleHeader('x-frame-options', 'clickjack', false);
 
-        if (isSiteRootRequest(requestDetails)) {
-            const hstsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === 'strict-transport-security');
-            if (!hstsHeader) {
-                const normalizedUrl = normalizeUrl(requestDetails.url);
-                if (store.data[normalizedUrl] == null) {
-                    store.data[normalizedUrl] = {};
+    function handleHeader(headerName, propertyName, alertIfExists) {
+        return async (requestDetails, setTextCallback) => {
+            const store = await browser.storage.local.get();
+
+            if (isSiteRootRequest(requestDetails)) {
+                const header = requestDetails.responseHeaders.find(h => h.name.toLowerCase() === headerName);
+                if ((header && alertIfExists) || (!header && !alertIfExists)) {
+                    const normalizedUrl = normalizeUrl(requestDetails.url);
+                    if (store.data[normalizedUrl] == null) {
+                        store.data[normalizedUrl] = {};
+                    }
+                    store.data[normalizedUrl][propertyName] = true;
+                    await browser.storage.local.set(store);
+                    await setTextCallback(normalizedUrl);
                 }
-                store.data[normalizedUrl].hsts = true;
-                await browser.storage.local.set(store);
-                await setTextCallback(normalizedUrl);
             }
         }
     }

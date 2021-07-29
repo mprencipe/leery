@@ -75,6 +75,9 @@ browser.storage.local.get().then((store) => {
         if (data.mimeSniffing) {
             addWarning('X-Content-Type-Options: nosniff missing', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options', warningsList);
         }
+        if (data.server) {
+            addWarning('Server header might reveal server software', 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server', warningsList);
+        }
 
     }).catch((err) => {
         console.log('Error querying tabs', err);
