@@ -1,5 +1,15 @@
 {
+  "name": "leery",
+  "license": "MIT",
+  "version": "2.0",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
   "devDependencies": {
     "webextension-polyfill": "^0.8.0"
+  },
+  "dependencies": {
+    "jest": "^27.1.0"
   }
 }

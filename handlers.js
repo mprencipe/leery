@@ -22,6 +22,9 @@ const Handlers = {};
         const corsHeader = requestDetails.responseHeaders.find(h => h.name.toLowerCase() == 'access-control-allow-origin');
         if (corsHeader != null && corsHeader.value == '*') {
             const normalizedUrl = normalizeUrl(documentOrigin);
+            if (store.data[normalizedUrl] == null) {
+                store.data[normalizedUrl] = {};
+            }
             store.data[normalizedUrl]['cors-star'] = true;
             await browser.storage.local.set(store);
             await setTextCallback(normalizedUrl);
@@ -88,3 +91,8 @@ const Handlers = {};
     }
 
 })();
+
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Handlers;
+}
